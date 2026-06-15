@@ -1,0 +1,17 @@
+# install the Azure CLI on Linux
+sudo apt-get update
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+az --version
+
+export TENANT_ID_LIVE=$(az account show --query tenantId --output tsv)
+echo $TENANT_ID_LIVE
+
+# login to Azure
+az account show
+az login --tenant $TENANT_ID_LIVE
+#az account set --subscription $SUBSCRIPTION_NAME_FY25
+az account list --output table
+az account set --subscription "Live-JFV-VSE"
+az account set --subscription "MPN-MAPS-timrobertsusa"
+
+curl ifconfig.me

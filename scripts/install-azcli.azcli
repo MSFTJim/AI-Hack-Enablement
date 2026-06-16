@@ -9,6 +9,7 @@ echo $TENANT_ID_LIVE
 # login to Azure
 az account show
 az login --tenant $TENANT_ID_LIVE
+az login --tenant $TENANT_ID_MSFT
 #az account set --subscription $SUBSCRIPTION_NAME_FY25
 az account list --output table
 az account set --subscription "Live-JFV-VSE"

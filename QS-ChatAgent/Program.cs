@@ -1,38 +1,46 @@
-﻿﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Azure.Identity;
 using Azure.AI.Projects;
 using Azure.AI.Extensions.OpenAI;
 using OpenAI.Responses;
+using Azure.AI.Projects.Agents;
 
 #pragma warning disable OPENAI001
 
 Console.WriteLine("Start of Program");
 
 // Load configuration and get values
-var (projectEndpoint, modelDeploymentName, contentsafetyEndpoint) = LoadConfiguration();
+var (projectEndpoint, modelDeploymentName, contentsafetyEndpoint, agentName) = LoadConfiguration();
 
 Console.WriteLine($"Project Endpoint: {projectEndpoint}");
 Console.WriteLine($"Model Deployment Name: {modelDeploymentName}");
 Console.WriteLine($"Content Safety Endpoint: {contentsafetyEndpoint}");
-
-//var ProjectEndpoint = projectEndpoint;
+Console.WriteLine($"Agent Name: {agentName}");
 
 // Create project client to call Foundry API
 AIProjectClient projectClient = new(
     endpoint: new Uri(projectEndpoint),
     tokenProvider: new DefaultAzureCredential());
 
-// Run a responses API call
-ProjectResponsesClient responseClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForModel(modelDeploymentName);
-ResponseResult response = await responseClient.CreateResponseAsync(
-    "What is the size of France in square miles?");
+// Create a conversation for multi-turn chat
+ProjectConversation conversation = projectClient.ProjectOpenAIClient.GetProjectConversationsClient().CreateProjectConversation();
+
+// Chat with the agent to answer questions
+ProjectResponsesClient responsesClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForAgent(
+    defaultAgent: agentName,
+    defaultConversationId: conversation.Id);
+ResponseResult response = responsesClient.CreateResponse("What is the size of France in square miles?");
+Console.WriteLine(response.GetOutputText());
+
+// Ask a follow-up question in the same conversation
+response = responsesClient.CreateResponse("And what is the capital city?");
 Console.WriteLine(response.GetOutputText());
 
 
 //////// MAIN Program END ////////
 
 // Load configuration from appsettings, user secrets, and environment variables
-(string, string, string) LoadConfiguration()
+(string, string, string, string) LoadConfiguration()
 {
     var config = new ConfigurationBuilder()
         .SetBasePath(Directory.GetCurrentDirectory())
@@ -41,8 +49,8 @@ Console.WriteLine(response.GetOutputText());
         .AddEnvironmentVariables()
         .Build();
 
-    string projectEndpoint = config["AI_RESOURCE_ENDPOINT"]
-        ?? throw new InvalidOperationException("Missing AI_RESOURCE_ENDPOINT");
+    string projectEndpoint = config["PROJECT_ENDPOINT"]
+        ?? throw new InvalidOperationException("Missing PROJECT_ENDPOINT");
 
     string modelDeploymentName = config["MODEL_DEPLOYMENT_NAME"]
         ?? throw new InvalidOperationException("Missing MODEL_DEPLOYMENT_NAME");
@@ -50,5 +58,9 @@ Console.WriteLine(response.GetOutputText());
     string contentsafetyEndpoint = config["CSAFE_ENDPOINT"]
         ?? throw new InvalidOperationException("Missing CSAFE_ENDPOINT");
 
-    return (projectEndpoint, modelDeploymentName, contentsafetyEndpoint);
+    string agentName = config["AGENT_NAME"]
+        ?? throw new InvalidOperationException("Missing AGENT_NAME");
+
+    return (projectEndpoint, modelDeploymentName, contentsafetyEndpoint, agentName);
 }
+

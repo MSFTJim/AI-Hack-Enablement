@@ -1,0 +1,23 @@
+# Navigate to the directory where you want to create your project
+# cd path/to/your/projects
+
+# Create a new console application in a subfolder named CSafeApp
+dotnet new console -o QS-ChatAgent
+
+# Add project to solution file
+dotnet new sln -n AI_Sln_Projs
+dotnet sln AI_Sln_Projs.slnx add ./QS-ChatAgent/QS-ChatAgent.csproj
+
+# Navigate into the newly created project folder
+cd QS-ChatAgent
+
+dotnet add package Microsoft.Extensions.Configuration
+dotnet add package Microsoft.Extensions.Configuration.Json
+dotnet add package Microsoft.Extensions.Configuration.EnvironmentVariables
+dotnet add package Microsoft.Extensions.Configuration.UserSecrets
+
+dotnet add package Azure.AI.Projects
+dotnet add package Azure.AI.Projects.Agents
+dotnet add package Azure.AI.Extensions.OpenAI
+dotnet add package Azure.Identity
+

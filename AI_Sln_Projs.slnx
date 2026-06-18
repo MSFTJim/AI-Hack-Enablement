@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="QS-Agent/QS-Agent.csproj" />
+  <Project Path="QS-ChatAgent/QS-ChatAgent.csproj" />
   <Project Path="QS-ModelChat/QS-ModelChat.csproj" />
 </Solution>

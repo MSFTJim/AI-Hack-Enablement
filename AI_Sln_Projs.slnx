@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="EnablementAgent/EnablementAgent.csproj" />
+  <Project Path="EnablementFocusApi/EnablementFocusApi.csproj" />
   <Project Path="QS-Agent/QS-Agent.csproj" />
   <Project Path="QS-ChatAgent/QS-ChatAgent.csproj" />
   <Project Path="QS-ModelChat/QS-ModelChat.csproj" />

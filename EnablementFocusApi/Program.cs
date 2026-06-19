@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.HttpLogging;
+using EnablementFocusApi.Models;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,10 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+// Bind strongly typed team focus settings from configuration
+builder.Services.Configure<TeamFocusSettings>(
+    builder.Configuration.GetSection(TeamFocusSettings.SectionName));
 
 // Add HTTP logging to capture request/response details
 builder.Services.AddHttpLogging(logging =>
@@ -50,45 +56,27 @@ app.MapGet("/", (ILogger<Program> logger) =>
 
 
 
-app.MapGet("/focusareas/{person}", (string person, ILogger<Program> logger) =>
+app.MapGet("/focusareas/{person}", (
+    string person,
+    IOptionsMonitor<TeamFocusSettings> teamFocusSettings,
+    ILogger<Program> logger) =>
 {
     logger.LogInformation("GetFocusAreas endpoint called with person: {Person}", person);    
 
+    var teamMembers = teamFocusSettings.CurrentValue.TeamMembers;
 
-    var data = new Dictionary<string, string[]>
+    if (!teamMembers.TryGetValue(person, out var teamMember))
     {
-        ["jim"] = new[]
+        logger.LogWarning("No focus areas found for person: {Person}", person);
+        return Results.NotFound(new
         {
-            "Azure AI Foundry",
-            "AI Apps & Agents",
-            "Technical Enablement",
-            "Fabric IQ",
-            "Foundry IQ"
-        },
+            message = $"No focus areas found for {person}"
+        });
+    }
 
-        ["reni"] = new[]
-        {
-            "Technical Readiness",
-            "Fabric",
-            "Fabric IQ"
-        },
+    var focusAreas = teamMember.FocusAreas;
 
-        ["chris"] = new[]
-        {
-            "GitHub Copilot",
-            "Foundry IQ"
-            
-        },
-
-        ["jc"] = new[]
-        {
-            "SQL Server",
-            "Database Migrations",
-            "Fabric"
-        }
-    };
-
-    if (!data.TryGetValue(person.ToLower(), out var focusAreas))
+    if (focusAreas is null)
     {
         logger.LogWarning("No focus areas found for person: {Person}", person);
         return Results.NotFound(new
